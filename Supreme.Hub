@@ -3618,13 +3618,55 @@ task.spawn(function()
     while task.wait(Options.SpeedBypassMethod.Value == "模式 1" and 0 or 0.209)
 
 do
-        if Library.Unloaded then break end
+if Library.Unloaded then break end
 if Options.SpeedBypassMethod.Value == "模式 1" then
-if Toggles.BypassSpeed.Value then
-if CollisionClone then
-CollisionClone.Massless = true
-end
-RemotesFolder.Crouch:FireServer(true, true)
+    if Toggles.BypassSpeed.Value then
+        local function GetAbysallCurrentSpeed()
+            local Speed = 15
+            if LocalPlayer.Character then
+                Speed = Speed + (LocalPlayer.Character:GetAttribute("SpeedBoost") or 0)
+                Speed = Speed + (LocalPlayer.Character:GetAttribute("SpeedBoostBehind") or 0)
+                Speed = Speed + (LocalPlayer.Character:GetAttribute("SpeedBoostExtra") or 0)
+            end
+            local LiveModifiers = ReplicatedStorage:FindFirstChild("LiveModifiers")
+            if LiveModifiers then
+                Speed = Speed + (LiveModifiers:FindFirstChild("PlayerFast") and 3 or 0)
+                Speed = Speed + (LiveModifiers:FindFirstChild("PlayerFaster") and 6 or 0)
+                Speed = Speed + (LiveModifiers:FindFirstChild("PlayerFastest") and 20 or 0)
+                Speed = Speed - (LiveModifiers:FindFirstChild("PlayerSlow") and 3 or 0)
+            end
+            local function GetInjuriesSpeed()
+                if not LocalPlayer.Character then return 0 end
+                local Humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if Humanoid then
+                    return 0.075 * (Humanoid.MaxHealth - Humanoid.Health)
+                end
+                return 0
+            end
+            Speed = Speed - (LiveModifiers and LiveModifiers:FindFirstChild("PlayerSlowHealth") and GetInjuriesSpeed() or 0)
+            local IsCrouching = LocalPlayer.Character and LocalPlayer.Character:GetAttribute("Crouching") or false
+            if IsCrouching then
+                if LiveModifiers and LiveModifiers:FindFirstChild("PlayerCrouchSlow") then
+                    Speed = Speed - 8
+                elseif LiveModifiers and LiveModifiers:FindFirstChild("PlayerSlow") then
+                    Speed = Speed - 8
+                else
+                    Speed = Speed - 5
+                end
+            end
+            Speed = Speed + (Options.MovementSpeed and Options.MovementSpeed.Value or 21)
+            return math.max(Speed, 0)
+        end
+        if LocalPlayer.Character then
+            local Humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if Humanoid then
+                Humanoid.WalkSpeed = GetAbysallCurrentSpeed()
+            end
+        end
+        if CollisionClone then
+            CollisionClone.Massless = true
+        end
+        RemotesFolder.Crouch:FireServer(true, true)
 end
 elseif  Options.SpeedBypassMethod.Value == "模式 2" then
 
